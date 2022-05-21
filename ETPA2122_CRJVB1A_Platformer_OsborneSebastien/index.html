@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" /><title>Oragami Salami</title>
+    <script src="//cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"></script>
+    </script>
+
+    <style type="text/css"> body 
+    
+        { margin: 0; 
+        }
+ 
+        #endGame{
+            display: none;
+            font-size: 100px;
+            color: red;
+            padding-top: 230px;
+            padding-left:110px ;
+            position:absolute;
+            z-index:1
+        }
+
+        
+    </style>
+</head>
+<body>
+    <script type="text/javascript">  
+
+
+    class menuDebut extends Phaser.Scene{
+            constructor(){
+            super("menuDebut");
+        }
+
+
+        preload(){
+            this.load.image("menuDebut", "assets/start_menu.png");
+            this.load.image("menuBouton", "assets/start.png");
+        }
+        create(){
+            this.add.image(this.cameras.main.width/2,this.cameras.main.height/2,"menuDebut").setScale(1);
+            
+
+
+        this.cursors = this.input.keyboard.createCursorKeys();
+
+        var startButton = this.add.image(400,360, 'menuBouton').setScale(1.2).setInteractive();
+
+            startButton.on('pointerdown', function (pointer) {
+
+                this.scene.scene.start("menuDebut", {
+                pv:4,
+                invincible: true
+        })
+
+    });
+    }
+
+     update(){
+        if(this.cursors.space.isDown){
+            this.scene.start("Jeu");
+        }
+    }
+}
+
+
+class Jeu extends Phaser.Scene{
+        constructor(){
+        super("Jeu");
+  
+
+        
+        }
+       
+       
+        preload(){
+            this.load.image("Phaser_Block", "assets/block.png");
+
+            this.load.tilemapTiledJSON("carte", "map.json"); 
+
+            this.load.spritesheet('hpBar','assets/health_bar.png',
+            { frameWidth: 320, frameHeight: 96 }); 
+
+            this.load.image('trash','assets/trash.png');
+
+            this.load.spritesheet('kiwi','assets/kiwi.png',
+            { frameWidth: 128, frameHeight: 128 });
+
+            this.load.spritesheet('plane','assets/plane.png',
+            { frameWidth: 128, frameHeight: 128 });
+
+            //this.load.image('trash', 'assets/trash.png');
+
+            this.load.spritesheet('boat','assets/boat.png',
+            { frameWidth: 128, frameHeight: 128 });
+            
+            
+            
+        }
+
+
+        create(){
+            
+            const carteDuNiveau = this.add.tilemap("carte");
+            
+            // importer les TileSet 
+            
+            const tilesetGround = carteDuNiveau.addTilesetImage(
+                    "block",
+                    "Phaser_Block"
+                );  
+             
+            const sky = carteDuNiveau.createLayer(
+                "sky",
+                tilesetGround,
+            );
+           
+            const ground = carteDuNiveau.createLayer(
+                "ground",
+                tilesetGround,
+            );
+
+            const liquid = carteDuNiveau.createLayer(
+                "liquid",
+                tilesetGround,
+            );
+
+            const hot = carteDuNiveau.createLayer(
+                "hot",
+                tilesetGround,
+            );
+
+            const mob = carteDuNiveau.createLayer(
+                "mob",
+                tilesetGround,
+            );
+
+            this.animNormal = true
+            this.animPlane = false
+            this.animBoat = false
+            this.transfo = false
+            this.boat = false
+            this.plane = false
+
+            this.protectLiquid = false
+            this.protectHot = false
+            
+            carteDuNiveau.getObjectLayer('spawnJoueur').objects.forEach((spawnJoueur) => {
+            this.spawnXSortieScene = spawnJoueur.x, 
+            this.spawnYSortieScene =  spawnJoueur.y
+        });
+
+           
+            this.player = this.physics.add.sprite(this.spawnXSortieScene, this.spawnYSortieScene,'kiwi').setScale(0.7);
+           
+
+            this.physics.add.collider(this.player, ground);
+            ground.setCollisionByProperty({estSolide: true });
+
+            
+
+            this.physics.add.collider(this.player, liquid,this.testKill,null,this)
+            liquid.setCollisionByProperty({estSolide: true });
+
+            this.physics.add.collider(this.player, hot,this.Kill,null,this)
+            hot.setCollisionByProperty({estSolide: true });
+
+
+                    
+            this.barrehp = this.add.sprite(70,30,'hpBar').setScale(1)  
+            this.barrehp.setScrollFactor(0)
+
+
+
+
+            //build.setCollisionByProperty({ estSolide: true });
+            this.player.setCollideWorldBounds(true);
+            this.cameras.main.zoom = 1;
+            this.physics.world.setBounds(0, 0,14336,1344);
+            this.cameras.main.setBounds(0, 0,14336,1344);
+            this.cameras.main.startFollow(this.player); 
+   
+
+            this.anims.create({
+                key: 'up',
+                frames: this.anims.generateFrameNumbers('kiwi', {start:7,end:7}),
+                frameRate: 8,
+                repeat: -1
+            });
+        
+
+            this.anims.create({
+                key: 'left',
+                frames: this.anims.generateFrameNumbers('kiwi', {start:0,end:7}),
+                frameRate: 8,
+                repeat: -1
+            });
+            
+            this.anims.create({
+                key: 'turn',
+                frames: this.anims.generateFrameNumbers('kiwi', {start:8,end:12}),
+                frameRate: 8,
+                repeat: -1
+            });
+
+            this.anims.create({
+                key: 'right',
+                frames: this.anims.generateFrameNumbers('kiwi', {start:13,end:21}),
+                frameRate: 8,
+                repeat: -1
+            });
+
+            
+
+
+            this.anims.create({
+                key: 'planeLeft',
+                frames: this.anims.generateFrameNumbers('plane', {start:8,end:11}),
+                frameRate: 8,
+                repeat: -1
+            });
+
+            this.anims.create({
+                key: 'planeRight',
+                frames: this.anims.generateFrameNumbers('plane', {start:0,end:3}),
+                frameRate: 8,
+                repeat: -1
+            });
+
+            this.anims.create({
+                key: 'turnPlane',
+                frames: this.anims.generateFrameNumbers('plane', {start:4,end:7}),
+                frameRate: 8,
+                repeat: -1
+            });
+
+
+            this.anims.create({
+                key: 'boatRight',
+                frames: this.anims.generateFrameNumbers('boat', {start:0,end:3}),
+                frameRate: 8,
+                repeat: -1
+            });
+
+            this.anims.create({
+                key: 'turnBoat',
+                frames: this.anims.generateFrameNumbers('boat', {start:4,end:7}),
+                frameRate: 8,
+                repeat: -1
+            });
+
+            this.anims.create({
+                key: 'boatLeft',
+                frames: this.anims.generateFrameNumbers('boat', {start:8,end:11}),
+                frameRate: 8,
+                repeat: -1
+            });
+
+
+         
+            this.cursors = this.input.keyboard.createCursorKeys();
+            this.keys = this.input.keyboard.addKeys({
+                z: Phaser.Input.Keyboard.KeyCodes.Z,
+                q: Phaser.Input.Keyboard.KeyCodes.Q,
+                d: Phaser.Input.Keyboard.KeyCodes.D,
+                w: Phaser.Input.Keyboard.KeyCodes.W,
+                x: Phaser.Input.Keyboard.KeyCodes.X,
+                //c: Phaser.Input.Keyboard.KeyCodes.C,
+                r: Phaser.Input.Keyboard.KeyCodes.R,
+            });
+    }
+
+   
+
+
+
+
+     update(){
+        
+        
+                this.moveUp = Phaser.Input.Keyboard.JustDown(this.cursors.up)
+                this.moveLeft = (this.cursors.left.isDown || this.keys.q.isDown)
+                this.moveRight = (this.cursors.right.isDown || this.keys.d.isDown)
+                this.moveUp = (this.cursors.up.isDown || this.keys.z.isDown)
+
+                this.touchePlane = Phaser.Input.Keyboard.JustDown(this.keys.w)
+                this.toucheBoat = Phaser.Input.Keyboard.JustDown(this.keys.x)
+                //this.toucheShield = Phaser.Input.Keyboard.JustDown(this.keys.c)
+                this.toucheReset = Phaser.Input.Keyboard.JustDown(this.keys.r)
+
+            
+        
+            if (this.animNormal == true){
+                this.animLeft = 'left'
+                this.animRight = 'right'
+                this.animTurn = 'turn'
+            }
+
+            if (this.animPlane == true){
+                this.animLeft = 'planeLeft'
+                this.animRight = 'planeRight'
+                this.animTurn = 'turnPlane'
+            }
+
+            if (this.animBoat == true){
+                this.animLeft = 'boatLeft'
+                this.animRight = 'boatRight'
+                this.animTurn = 'turnBoat'
+            }
+
+
+
+            if (this.touchePlane) { 
+                this.plane = true
+                this.boat = false
+                this.animNormal = false
+                this.animPlane = true 
+                this.transfo = true
+                this.animBoat = false
+                this.protectLiquid = false
+                this.protectHot = false
+            }
+
+            if (this.toucheReset) { 
+                this.plane = false
+                this.boat = false
+                this.animPlane = false 
+                this.animNormal = true
+                this.transfo = false
+                this.animBoat = false
+                this.protectLiquid = false
+                this.protectHot = false
+            }
+
+            if (this.toucheBoat) { 
+                this.protectLiquid = true
+                this.protectHot = false
+                this.plane = false
+                this.boat = true
+                this.animPlane = false 
+                this.animNormal = false
+                this.animBoat = true
+                this.transfo = true
+            }
+
+            
+
+            console.log(this.transfo)
+            if (this.boat == true){
+
+                    if (this.moveLeft){ 
+                        this.player.direction = 'left';
+                        this.player.setVelocityX(-200); 
+                        this.player.anims.play(this.animLeft, true);
+                    }
+                    else if (this.moveRight){ 
+                        this.player.direction = 'right';
+                        this.player.setVelocityX(200);
+                        this.player.anims.play(this.animRight, true);
+                    }
+                    else{ 
+                        this.player.setVelocityX(0); 
+                        this.player.anims.play(this.animTurn, true);
+                    }
+
+                }
+            
+
+            if (this.plane == true){
+                this.player.setVelocityY(50); 
+
+                    if (this.moveLeft){ 
+                        this.player.direction = 'left';
+                        this.player.setVelocityX(-300); 
+                        this.player.anims.play(this.animLeft, true);
+                    }
+                    else if (this.moveRight){ 
+                        this.player.direction = 'right';
+                        this.player.setVelocityX(300);
+                        this.player.anims.play(this.animRight, true);
+                    }
+                    else{ 
+                        this.player.setVelocityX(0); 
+                        this.player.anims.play(this.animTurn, true);
+                    }
+
+                    if (this.player.body.blocked.down ) {
+                        this.plane = false
+                this.animPlane = false 
+                this.animNormal = true
+                this.transfo = false
+                this.protectLiquid = false
+                this.protectHot = false
+                    }
+
+                }  
+
+           
+            if (this.transfo == false){
+
+                if (this.moveUp && this.player.body.blocked.down ) {
+                        this.player.setVelocityY(-600);
+
+                    }
+                    if (this.moveLeft){ 
+                        this.player.direction = 'left';
+                        this.player.setVelocityX(-300); 
+                        this.player.anims.play(this.animLeft, true);
+                    }
+                    else if (this.moveRight){ 
+                        this.player.direction = 'right';
+                        this.player.setVelocityX(300);
+                        this.player.anims.play(this.animRight, true);
+                    }
+                    else{ 
+                        this.player.setVelocityX(0); 
+                        this.player.anims.play(this.animTurn, true);
+                    }
+                }            
+            }
+
+            testKill(player,liquid){
+                if (this.protectLiquid == false){
+                    this.scene.restart()
+                    
+                }
+                
+            }
+
+            Kill(player,hot){
+                    this.scene.restart()
+                
+        }
+
+        }
+
+        
+
+
+        var config = {
+            pixelArt:true,
+            type: Phaser.AUTO,
+            width: 900, height: 600,
+            physics: {
+            default: 'arcade',
+            arcade: {
+            gravity: { y: 1000 },
+            debug: true
+            }},
+            scene: [menuDebut,Jeu],
+            input : {gamepad:true},
+            };
+
+        new Phaser.Game(config);  
+    </script>
+
+    <div id="endGame">GAME OVER</div>    
+
+    </script>
+</body>
+</html>

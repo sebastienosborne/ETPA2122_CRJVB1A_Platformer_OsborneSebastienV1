@@ -1,0 +1,153 @@
+<!doctype html>
+    <html lang="en">
+        <head>
+            <meta charset="UTF-8" /><title>Oragami Salami</title>
+            <script
+            src="//cdn.jsdelivr.net/npm/phaser@3.11.0/dist/phaser.js"></script>
+            <style type="text/css"> body { margin: 0; }</style>
+        </head>
+        <body>
+            <script type="text/javascript">
+                var config = {
+                type: Phaser.AUTO,
+                width: 800, height: 600,
+                physics: {
+                        default: 'arcade',
+                        arcade: {
+                            gravity: { y: 350 },
+                            debug: false
+                        }},
+                scene: {preload: preload, create: create, update: update }
+                };
+                new Phaser.Game(config);
+                function preload(){
+                this.load.image('sky', 'assets/sky.png');
+                this.load.image('ground', 'assets/platform.png');
+                this.load.image('trash', 'assets/trash.png');
+                this.load.image('bomb', 'assets/bomb.png');
+                this.load.spritesheet('kiwi','assets/kiwi.png',
+                { frameWidth: 69.5, frameHeight: 64 });
+                }
+                var platforms;
+                var player;
+                var bombs;
+                var cursors;
+                var gameOver = false;
+                var trashy;
+                var score;
+                score = 0
+                var scoreText;
+
+
+                function create(){
+                    this.add.image(400, 300, 'sky');
+                    cursors = this.input.keyboard.createCursorKeys();
+                    this.add.image(400, 300, 'sky');
+
+                    platforms = this.physics.add.staticGroup();
+                    platforms.create(400, 568, 'ground').setScale(2).refreshBody();
+                    platforms.create(600, 400, 'ground');
+                    platforms.create(50, 250, 'ground');
+                    platforms.create(750, 220, 'ground');
+                    this.add.image(400, 300, 'trash');
+
+                    player = this.physics.add.sprite(100, 450, 'kiwi');
+                    player.setBounce(0.1);
+                    player.setCollideWorldBounds(true);
+                    this.physics.add.collider(player, platforms);
+                    this.anims.create({
+                    key: 'left',
+                    frames: this.anims.generateFrameNumbers('kiwi', {start:0,end:7}),
+                    frameRate: 8,
+                    repeat: -1
+                    });
+                    this.anims.create({
+                    key: 'turn',
+                    frames: [ { key: 'kiwi', frame: 8 } ],
+                    frameRate: 20
+                    });
+                    this.anims.create({
+                    key: 'right',
+                    frames: this.anims.generateFrameNumbers('kiwi', {start:9,end:16}),
+                    frameRate: 8,
+                    repeat: -1
+                    });
+
+                    scoreText=this.add.text(16,16,'score: 0',{fontSize:'32px',fill:'#000'});
+                    //affiche un texte à l’écran, pour le score
+                    trashy = this.physics.add.group({
+                    key: 'trash', repeat: 11,
+                    setXY: { x: 12, y: 0, stepX: 70 }
+                    });
+                    trashy.children.iterate(function (child) {
+                    child.setBounceY(Phaser.Math.FloatBetween(0.2, 0.4));
+                    }); //chaque étoile va rebondir un peu différemment
+                    this.physics.add.collider(trashy, platforms);
+                    //et collisionne avec les plateformes
+                    this.physics.add.overlap(player, trashy, collectTrash, null, this);
+                    //le contact perso/étoile ne génère pas de collision (overlap)
+                    //mais en revanche cela déclenche une fonction collectTrash
+
+                    bombs = this.physics.add.group();
+                    this.physics.add.collider(bombs, platforms);
+                    this.physics.add.collider(player, bombs, hitBomb, null, this);
+
+                }
+
+                function hitBomb(player, bomb){
+                    this.physics.pause();
+                    player.setTint(0xff0000);
+                    player.anims.play('turn');
+                    gameOver = true;
+                }
+
+
+                function collectTrash(player, trash){
+                    trash.disableBody(true, true); // l’étoile disparaît
+                    score += 10; //augmente le score de 10
+                    scoreText.setText('Score: ' + score); //met à jour l’affichage du score
+
+                    if (trashy.countActive(true) === 0){// si toutes les étoiles sont prises
+                    trashy.children.iterate(function (child) {
+                    child.enableBody(true, child.x, 0, true, true);
+                    }); // on les affiche toutes de nouveau
+                    var x = (player.x < 400) ? Phaser.Math.Between(400, 800) :
+                    Phaser.Math.Between(0, 400);
+                    // si le perso est à gauche de l’écran, on met une bombe à droite
+                    // si non, on la met à gauche de l’écran
+                    var bomb = bombs.create(x, 16, 'bomb');
+                    bomb.setBounce(1);
+                    bomb.setCollideWorldBounds(true);
+                    bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
+                    bomb.allowGravity = false; //elle n’est pas soumise à la gravité
+                    }
+
+
+                }
+
+                function update(){
+
+                    if (gameOver){return;}
+
+                    if (cursors.left.isDown){ //si la touche gauche est appuyée
+                    player.setVelocityX(-300); //alors vitesse négative en X
+                    player.anims.play('left', true); //et animation => gauche
+                    }
+                    else if (cursors.right.isDown){ //sinon si la touche droite est appuyée
+                    player.setVelocityX(300); //alors vitesse positive en X
+                    player.anims.play('right', true); //et animation => droite
+                    }
+                    else{ // sinon
+                    player.setVelocityX(0); //vitesse nulle
+                    player.anims.play('turn'); //animation fait face caméra
+                    }
+                    if (cursors.up.isDown && player.body.touching.down){
+                    //si touche haut appuyée ET que le perso touche le sol
+                    player.setVelocityY(-350); //alors vitesse verticale négative
+                    //(on saute)
+                    }
+
+                }
+            </script>
+        </body>
+    </html>
