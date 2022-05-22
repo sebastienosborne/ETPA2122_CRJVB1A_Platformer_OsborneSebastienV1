@@ -151,7 +151,7 @@ class Jeu extends Phaser.Scene{
         });
 
            
-            this.player = this.physics.add.sprite(this.spawnXSortieScene, this.spawnYSortieScene,'kiwi').setScale(0.7);
+            this.player = this.physics.add.sprite(this.spawnXSortieScene, this.spawnYSortieScene,'kiwi').setScale(0.6);
            
 
             this.physics.add.collider(this.player, ground);
@@ -176,8 +176,8 @@ class Jeu extends Phaser.Scene{
             //build.setCollisionByProperty({ estSolide: true });
             this.player.setCollideWorldBounds(true);
             this.cameras.main.zoom = 1;
-            this.physics.world.setBounds(0, 0,14336,1344);
-            this.cameras.main.setBounds(0, 0,14336,1344);
+            this.physics.world.setBounds(0, 0,14336,7256);
+            this.cameras.main.setBounds(0, 0,14336,7256);
             this.cameras.main.startFollow(this.player); 
    
 
