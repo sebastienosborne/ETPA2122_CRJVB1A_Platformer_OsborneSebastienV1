@@ -81,19 +81,20 @@ class Jeu extends Phaser.Scene{
             this.load.spritesheet('hpBar','assets/health_bar.png',
             { frameWidth: 320, frameHeight: 96 }); 
 
-            this.load.image('trash','assets/trash.png');
-
             this.load.spritesheet('kiwi','assets/kiwi.png',
             { frameWidth: 128, frameHeight: 128 });
 
             this.load.spritesheet('plane','assets/plane.png',
             { frameWidth: 128, frameHeight: 128 });
 
-            //this.load.image('trash', 'assets/trash.png');
-
             this.load.spritesheet('boat','assets/boat.png',
             { frameWidth: 128, frameHeight: 128 });
             
+            this.load.spritesheet('shield','assets/shield.png',
+            { frameWidth: 128, frameHeight: 128 });
+            //this.load.image('trash', 'assets/trash.png');
+
+        
             
             
         }
@@ -138,31 +139,36 @@ class Jeu extends Phaser.Scene{
             this.animNormal = true
             this.animPlane = false
             this.animBoat = false
+            this.animShield = false
             this.transfo = false
-            this.boat = false
             this.plane = false
+            this.boat = false
+            this.shield = false
 
             this.protectLiquid = false
             this.protectHot = false
+            
             
             carteDuNiveau.getObjectLayer('spawnJoueur').objects.forEach((spawnJoueur) => {
             this.spawnXSortieScene = spawnJoueur.x, 
             this.spawnYSortieScene =  spawnJoueur.y
         });
 
-           
+        //this.scientifique.setSize(21,20);
+        //this.scientifique.setOffset(0,11);
+            
+        
             this.player = this.physics.add.sprite(this.spawnXSortieScene, this.spawnYSortieScene,'kiwi').setScale(0.6);
            
 
             this.physics.add.collider(this.player, ground);
             ground.setCollisionByProperty({estSolide: true });
-
             
 
-            this.physics.add.collider(this.player, liquid,this.testKill,null,this)
+            this.physics.add.collider(this.player,liquid,this.testKill,null,this)
             liquid.setCollisionByProperty({estSolide: true });
 
-            this.physics.add.collider(this.player, hot,this.Kill,null,this)
+            this.physics.add.collider(this.player,hot,this.Kill,null,this)
             hot.setCollisionByProperty({estSolide: true });
 
 
@@ -210,26 +216,27 @@ class Jeu extends Phaser.Scene{
                 repeat: -1
             });
 
-            
-
+        
 
             this.anims.create({
                 key: 'planeLeft',
-                frames: this.anims.generateFrameNumbers('plane', {start:8,end:11}),
+                frames: this.anims.generateFrameNumbers('plane', {start:10,end:13}),
                 frameRate: 8,
                 repeat: -1
             });
-
+ 
+ 
+            this.anims.create({
+                key: 'planeTurn',
+                frames: this.anims.generateFrameNumbers('plane', {start:4,end:9}),
+                frameRate: 8,
+                repeat: -1
+            });
+            
+            
             this.anims.create({
                 key: 'planeRight',
                 frames: this.anims.generateFrameNumbers('plane', {start:0,end:3}),
-                frameRate: 8,
-                repeat: -1
-            });
-
-            this.anims.create({
-                key: 'turnPlane',
-                frames: this.anims.generateFrameNumbers('plane', {start:4,end:7}),
                 frameRate: 8,
                 repeat: -1
             });
@@ -243,7 +250,7 @@ class Jeu extends Phaser.Scene{
             });
 
             this.anims.create({
-                key: 'turnBoat',
+                key: 'boatTurn',
                 frames: this.anims.generateFrameNumbers('boat', {start:4,end:7}),
                 frameRate: 8,
                 repeat: -1
@@ -257,6 +264,32 @@ class Jeu extends Phaser.Scene{
             });
 
 
+           
+            this.anims.create({
+                key: 'shieldRight',
+                frames: this.anims.generateFrameNumbers('shield', {start:0,end:3}),
+                frameRate: 8,
+                repeat: -1
+            });
+           
+            
+            this.anims.create({
+                key: 'shieldTurn',
+                frames: this.anims.generateFrameNumbers('shield', {start:4,end:7}),
+                frameRate: 8,
+                repeat: -1
+            });
+            
+            
+             this.anims.create({
+                key: 'shieldLeft',
+                frames: this.anims.generateFrameNumbers('shield', {start:8,end:11}),
+                frameRate: 8,
+                repeat: -1
+            });
+           
+
+
          
             this.cursors = this.input.keyboard.createCursorKeys();
             this.keys = this.input.keyboard.addKeys({
@@ -265,13 +298,10 @@ class Jeu extends Phaser.Scene{
                 d: Phaser.Input.Keyboard.KeyCodes.D,
                 w: Phaser.Input.Keyboard.KeyCodes.W,
                 x: Phaser.Input.Keyboard.KeyCodes.X,
-                //c: Phaser.Input.Keyboard.KeyCodes.C,
-                r: Phaser.Input.Keyboard.KeyCodes.R,
+                c: Phaser.Input.Keyboard.KeyCodes.C,
+                s: Phaser.Input.Keyboard.KeyCodes.S,
             });
     }
-
-   
-
 
 
 
@@ -285,27 +315,36 @@ class Jeu extends Phaser.Scene{
 
                 this.touchePlane = Phaser.Input.Keyboard.JustDown(this.keys.w)
                 this.toucheBoat = Phaser.Input.Keyboard.JustDown(this.keys.x)
-                //this.toucheShield = Phaser.Input.Keyboard.JustDown(this.keys.c)
-                this.toucheReset = Phaser.Input.Keyboard.JustDown(this.keys.r)
+                this.toucheShield = Phaser.Input.Keyboard.JustDown(this.keys.c)
+                this.toucheReset = Phaser.Input.Keyboard.JustDown(this.keys.s)
 
             
         
             if (this.animNormal == true){
                 this.animLeft = 'left'
-                this.animRight = 'right'
                 this.animTurn = 'turn'
+                this.animRight = 'right'
+                
             }
 
             if (this.animPlane == true){
                 this.animLeft = 'planeLeft'
+                this.animTurn = 'planeTurn'
                 this.animRight = 'planeRight'
-                this.animTurn = 'turnPlane'
+                
             }
 
             if (this.animBoat == true){
                 this.animLeft = 'boatLeft'
+                this.animTurn = 'boatTurn'
                 this.animRight = 'boatRight'
-                this.animTurn = 'turnBoat'
+                
+            }
+
+            if (this.animShield == true){
+                this.animRight = 'shieldRight'
+                this.animTurn = 'shieldTurn'
+                this.animLeft = 'shieldLeft'
             }
 
 
@@ -313,10 +352,12 @@ class Jeu extends Phaser.Scene{
             if (this.touchePlane) { 
                 this.plane = true
                 this.boat = false
+                this.shield = false
                 this.animNormal = false
                 this.animPlane = true 
                 this.transfo = true
                 this.animBoat = false
+                this.animShield = false
                 this.protectLiquid = false
                 this.protectHot = false
             }
@@ -324,10 +365,12 @@ class Jeu extends Phaser.Scene{
             if (this.toucheReset) { 
                 this.plane = false
                 this.boat = false
+                this.shield = false
                 this.animPlane = false 
                 this.animNormal = true
                 this.transfo = false
                 this.animBoat = false
+                this.animShield = false
                 this.protectLiquid = false
                 this.protectHot = false
             }
@@ -337,9 +380,24 @@ class Jeu extends Phaser.Scene{
                 this.protectHot = false
                 this.plane = false
                 this.boat = true
+                this.shield = false
                 this.animPlane = false 
                 this.animNormal = false
                 this.animBoat = true
+                this.animShield = false
+                this.transfo = true
+            }
+
+            if (this.toucheShield) { 
+                this.protectLiquid = true
+                this.protectHot = true
+                this.plane = false
+                this.boat = false
+                this.shield = true
+                this.animPlane = false 
+                this.animNormal = false
+                this.animBoat = false
+                this.animShield = true
                 this.transfo = true
             }
 
@@ -364,10 +422,33 @@ class Jeu extends Phaser.Scene{
                     }
 
                 }
+
+                
+            console.log(this.transfo)
+            if (this.shield == true){
+
+                    if (this.moveLeft){ 
+                        this.player.direction = 'left';
+                        this.player.setVelocityX(-200); 
+                        this.player.anims.play(this.animLeft, true);
+                    }
+                    else if (this.moveRight){ 
+                        this.player.direction = 'right';
+                        this.player.setVelocityX(200);
+                        this.player.anims.play(this.animRight, true);
+                    }
+                    else{
+                        this.player.setVelocityX(0); 
+                        this.player.anims.play(this.animTurn, true);
+                        
+                    }
+
+                }
+                
             
 
             if (this.plane == true){
-                this.player.setVelocityY(50); 
+                this.player.setVelocityY(60); 
 
                     if (this.moveLeft){ 
                         this.player.direction = 'left';
@@ -386,16 +467,35 @@ class Jeu extends Phaser.Scene{
 
                     if (this.player.body.blocked.down ) {
                         this.plane = false
-                this.animPlane = false 
-                this.animNormal = true
-                this.transfo = false
-                this.protectLiquid = false
-                this.protectHot = false
+                        this.animPlane = false 
+                        this.animNormal = true
+                        this.transfo = false
+                        this.protectLiquid = false
+                        this.protectHot = false
                     }
 
                 }  
 
-           
+ //Double Saut
+/*var sautBonus=1; //on peut faire un saut en plus en l'air
+
+if (this.input.keyboard.checkDown(cursors.up,3000)==true){
+                    if (player.body.touching.down){
+                //si touche haut appuyée ET que le perso touche le sol
+                dash = 0;
+                player.setVelocityY(-590); //alors vitesse verticale négative
+                //(on saute)
+                }
+                    else if(sautBonus>0){//sinon c'est qu'on est en l'air : on vérifie si il te reste un saut bonus
+                dash = 0;
+                player.setVelocityY(-590);
+                sautBonus-=1
+                    }
+
+                } 
+                if (player.body.touching.down){sautBonus = 1}// on redonne le saut une fois que le perso atterit*/Jeu
+                
+                
             if (this.transfo == false){
 
                 if (this.moveUp && this.player.body.blocked.down ) {
@@ -428,19 +528,19 @@ class Jeu extends Phaser.Scene{
             }
 
             Kill(player,hot){
+                if (this.protectHot == false){
                     this.scene.restart()
-                
+                }
+                      
         }
 
         }
-
-        
 
 
         var config = {
             pixelArt:true,
             type: Phaser.AUTO,
-            width: 900, height: 600,
+            width: 896, height: 448,
             physics: {
             default: 'arcade',
             arcade: {
