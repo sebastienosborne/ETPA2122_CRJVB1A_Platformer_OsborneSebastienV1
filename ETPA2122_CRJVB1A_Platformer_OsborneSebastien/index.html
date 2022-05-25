@@ -64,6 +64,7 @@
 }
 
 
+
 class Jeu extends Phaser.Scene{
         constructor(){
         super("Jeu");
@@ -92,6 +93,12 @@ class Jeu extends Phaser.Scene{
             
             this.load.spritesheet('shield','assets/shield.png',
             { frameWidth: 128, frameHeight: 128 });
+
+            this.load.image('mouse','assets/mouse.png')
+
+            this.load.image('bat','assets/bat.png')
+
+            
             //this.load.image('trash', 'assets/trash.png');
 
         
@@ -110,9 +117,10 @@ class Jeu extends Phaser.Scene{
                     "block",
                     "Phaser_Block"
                 );  
+
              
-            const sky = carteDuNiveau.createLayer(
-                "sky",
+            const bg = carteDuNiveau.createLayer(
+                "bg",
                 tilesetGround,
             );
            
@@ -131,10 +139,8 @@ class Jeu extends Phaser.Scene{
                 tilesetGround,
             );
 
-            const mob = carteDuNiveau.createLayer(
-                "mob",
-                tilesetGround,
-            );
+
+            
 
             this.animNormal = true
             this.animPlane = false
@@ -144,6 +150,7 @@ class Jeu extends Phaser.Scene{
             this.plane = false
             this.boat = false
             this.shield = false
+        
 
             this.protectLiquid = false
             this.protectHot = false
@@ -154,12 +161,14 @@ class Jeu extends Phaser.Scene{
             this.spawnYSortieScene =  spawnJoueur.y
         });
 
-        //this.scientifique.setSize(21,20);
-        //this.scientifique.setOffset(0,11);
+        
+
             
         
             this.player = this.physics.add.sprite(this.spawnXSortieScene, this.spawnYSortieScene,'kiwi').setScale(0.6);
-           
+            this.player.setSize(128,96);
+            this.player.setOffset(0,32);
+
 
             this.physics.add.collider(this.player, ground);
             ground.setCollisionByProperty({estSolide: true });
@@ -176,9 +185,25 @@ class Jeu extends Phaser.Scene{
             this.barrehp = this.add.sprite(70,30,'hpBar').setScale(1)  
             this.barrehp.setScrollFactor(0)
 
+            
+
+            //ennemies
+            
+            this.mob = this.physics.add.group({ collideWorldBounds: true });
+
+            carteDuNiveau.getObjectLayer('spawnEnemy').objects.forEach((spawnEnemy) => {
+                if(spawnEnemy.type == "Mouse"){
+                    const mouse = this.mob.create(spawnEnemy.x, spawnEnemy.y,'mouse').setSize(96, 48).setOffset(16, 16);   
+                }else if(spawnEnemy.type == "Bat"){
+                    const bat = this.mob.create(spawnEnemy.x, spawnEnemy.y,'bat').setSize(96, 64).setOffset(16, 16);
+                }
+            });
+
+            this.physics.add.collider(this.mob,ground)
+                   
 
 
-
+            
             //build.setCollisionByProperty({ estSolide: true });
             this.player.setCollideWorldBounds(true);
             this.cameras.main.zoom = 1;
@@ -289,7 +314,7 @@ class Jeu extends Phaser.Scene{
             });
            
 
-
+           
          
             this.cursors = this.input.keyboard.createCursorKeys();
             this.keys = this.input.keyboard.addKeys({
@@ -476,24 +501,7 @@ class Jeu extends Phaser.Scene{
 
                 }  
 
- //Double Saut
-/*var sautBonus=1; //on peut faire un saut en plus en l'air
 
-if (this.input.keyboard.checkDown(cursors.up,3000)==true){
-                    if (player.body.touching.down){
-                //si touche haut appuyée ET que le perso touche le sol
-                dash = 0;
-                player.setVelocityY(-590); //alors vitesse verticale négative
-                //(on saute)
-                }
-                    else if(sautBonus>0){//sinon c'est qu'on est en l'air : on vérifie si il te reste un saut bonus
-                dash = 0;
-                player.setVelocityY(-590);
-                sautBonus-=1
-                    }
-
-                } 
-                if (player.body.touching.down){sautBonus = 1}// on redonne le saut une fois que le perso atterit*/Jeu
                 
                 
             if (this.transfo == false){
@@ -531,6 +539,9 @@ if (this.input.keyboard.checkDown(cursors.up,3000)==true){
                 if (this.protectHot == false){
                     this.scene.restart()
                 }
+
+            
+
                       
         }
 
