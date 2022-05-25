@@ -140,6 +140,12 @@ class Jeu extends Phaser.Scene{
             );
 
 
+            const powers = carteDuNiveau.createLayer(
+                "powers",
+                tilesetGround,
+            );
+
+
             
 
             this.animNormal = true
@@ -161,8 +167,7 @@ class Jeu extends Phaser.Scene{
             this.spawnYSortieScene =  spawnJoueur.y
         });
 
-        
-
+    
             
         
             this.player = this.physics.add.sprite(this.spawnXSortieScene, this.spawnYSortieScene,'kiwi').setScale(0.6);
