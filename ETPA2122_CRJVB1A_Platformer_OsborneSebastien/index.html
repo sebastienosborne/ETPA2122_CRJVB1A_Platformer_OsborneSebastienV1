@@ -79,8 +79,10 @@ class Jeu extends Phaser.Scene{
 
             this.load.tilemapTiledJSON("carte", "map.json"); 
 
+
             this.load.spritesheet('hpBar','assets/health_bar.png',
             { frameWidth: 320, frameHeight: 96 }); 
+            //this.load.image('trash', 'assets/trash.png');
 
             this.load.spritesheet('kiwi','assets/kiwi.png',
             { frameWidth: 128, frameHeight: 128 });
@@ -94,16 +96,18 @@ class Jeu extends Phaser.Scene{
             this.load.spritesheet('shield','assets/shield.png',
             { frameWidth: 128, frameHeight: 128 });
 
-            this.load.image('mouse','assets/mouse.png')
 
-            this.load.image('bat','assets/bat.png')
+            this.load.spritesheet('mouse','assets/mouse.png',
+            { frameWidth: 128, frameHeight: 128 });
+
+            this.load.spritesheet('bat','assets/bat.png',
+            { frameWidth: 144, frameHeight: 112 });
+
+            //this.load.spritesheet('man','assets/man.png')
 
             
-            //this.load.image('trash', 'assets/trash.png');
+            
 
-        
-            
-            
         }
 
 
@@ -129,8 +133,8 @@ class Jeu extends Phaser.Scene{
                 tilesetGround,
             );
 
-            const liquid = carteDuNiveau.createLayer(
-                "liquid",
+            const wet = carteDuNiveau.createLayer(
+                "wet",
                 tilesetGround,
             );
 
@@ -158,7 +162,7 @@ class Jeu extends Phaser.Scene{
             this.shield = false
         
 
-            this.protectLiquid = false
+            this.protectWet = false
             this.protectHot = false
             
             
@@ -179,10 +183,10 @@ class Jeu extends Phaser.Scene{
             ground.setCollisionByProperty({estSolide: true });
             
 
-            this.physics.add.collider(this.player,liquid,this.testKill,null,this)
-            liquid.setCollisionByProperty({estSolide: true });
+            this.physics.add.collider(this.player, wet,this.testKill,null,this)
+            wet.setCollisionByProperty({estSolide: true });
 
-            this.physics.add.collider(this.player,hot,this.Kill,null,this)
+            this.physics.add.collider(this.player, hot,this.Kill,null,this)
             hot.setCollisionByProperty({estSolide: true });
 
 
@@ -198,10 +202,14 @@ class Jeu extends Phaser.Scene{
 
             carteDuNiveau.getObjectLayer('spawnEnemy').objects.forEach((spawnEnemy) => {
                 if(spawnEnemy.type == "Mouse"){
-                    const mouse = this.mob.create(spawnEnemy.x, spawnEnemy.y,'mouse').setSize(96, 48).setOffset(16, 16);   
+                    const mouse = this.mob.create(spawnEnemy.x, spawnEnemy.y,'mouse').setSize(128, 64).setOffset(0, 16);   
                 }else if(spawnEnemy.type == "Bat"){
-                    const bat = this.mob.create(spawnEnemy.x, spawnEnemy.y,'bat').setSize(96, 64).setOffset(16, 16);
+                    const bat = this.mob.create(spawnEnemy.x, spawnEnemy.y,'bat').setSize(112, 80).setOffset(16, 16);
                 }
+                //else if(spawnEnemy.type == "Man"){
+                    //const bat = this.mob.create(spawnEnemy.x, spawnEnemy.y,'bat').setSize(112, 128).setOffset(64, 16);
+                //}
+                
             });
 
             this.physics.add.collider(this.mob,ground)
@@ -329,7 +337,7 @@ class Jeu extends Phaser.Scene{
                 w: Phaser.Input.Keyboard.KeyCodes.W,
                 x: Phaser.Input.Keyboard.KeyCodes.X,
                 c: Phaser.Input.Keyboard.KeyCodes.C,
-                s: Phaser.Input.Keyboard.KeyCodes.S,
+                v: Phaser.Input.Keyboard.KeyCodes.V,
             });
     }
 
@@ -342,11 +350,11 @@ class Jeu extends Phaser.Scene{
                 this.moveLeft = (this.cursors.left.isDown || this.keys.q.isDown)
                 this.moveRight = (this.cursors.right.isDown || this.keys.d.isDown)
                 this.moveUp = (this.cursors.up.isDown || this.keys.z.isDown)
-
-                this.touchePlane = Phaser.Input.Keyboard.JustDown(this.keys.w)
-                this.toucheBoat = Phaser.Input.Keyboard.JustDown(this.keys.x)
+                
+                this.toucheBoat = Phaser.Input.Keyboard.JustDown(this.keys.w)
+                this.touchePlane = Phaser.Input.Keyboard.JustDown(this.keys.x)
                 this.toucheShield = Phaser.Input.Keyboard.JustDown(this.keys.c)
-                this.toucheReset = Phaser.Input.Keyboard.JustDown(this.keys.s)
+                this.toucheReset = Phaser.Input.Keyboard.JustDown(this.keys.v)
 
             
         
@@ -388,7 +396,7 @@ class Jeu extends Phaser.Scene{
                 this.transfo = true
                 this.animBoat = false
                 this.animShield = false
-                this.protectLiquid = false
+                this.protectWet = false
                 this.protectHot = false
             }
 
@@ -401,12 +409,12 @@ class Jeu extends Phaser.Scene{
                 this.transfo = false
                 this.animBoat = false
                 this.animShield = false
-                this.protectLiquid = false
+                this.protectWet = false
                 this.protectHot = false
             }
 
             if (this.toucheBoat) { 
-                this.protectLiquid = true
+                this.protectWet = true
                 this.protectHot = false
                 this.plane = false
                 this.boat = true
@@ -419,7 +427,7 @@ class Jeu extends Phaser.Scene{
             }
 
             if (this.toucheShield) { 
-                this.protectLiquid = true
+                this.protectWet = true
                 this.protectHot = true
                 this.plane = false
                 this.boat = false
@@ -500,7 +508,7 @@ class Jeu extends Phaser.Scene{
                         this.animPlane = false 
                         this.animNormal = true
                         this.transfo = false
-                        this.protectLiquid = false
+                        this.protectWet = false
                         this.protectHot = false
                     }
 
@@ -532,8 +540,8 @@ class Jeu extends Phaser.Scene{
                 }            
             }
 
-            testKill(player,liquid){
-                if (this.protectLiquid == false){
+            testKill(player,wet){
+                if (this.protectWet == false){
                     this.scene.restart()
                     
                 }
